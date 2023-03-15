@@ -39,6 +39,7 @@ public class SiliCompressor {
     public static String videoCompressionPath;
     private static final String IMAGE_DESTINATION = "Silicompressor/images";
 
+    int quality = 80;
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
     private static final String FILE_PROVIDER_AUTHORITY = ".iceteck.silicompressor.provider";
@@ -80,7 +81,7 @@ public class SiliCompressor {
      * @return filepath  The path of the compressed image file
      */
     public String compress(String uriString, File destination) {
-        return compressImage(uriString, destination);
+        return compressImage(uriString, quality,destination);
     }
 
     protected static String getAuthorities(@NonNull Context context) {
@@ -95,10 +96,10 @@ public class SiliCompressor {
      * @return Bitmap format of the new image file (compressed)
      * @throws IOException
      */
-    public Bitmap getCompressBitmap(String imagePath) throws IOException {
+    public Bitmap getCompressBitmap(String imagePath, int quality) throws IOException {
 
         // Return the required bitmap
-        return getCompressBitmap(imagePath, false);
+        return getCompressBitmap(imagePath, quality, false);
 
     }
 
@@ -112,7 +113,7 @@ public class SiliCompressor {
      */
     public String compress(String uriString, File destination, boolean deleteSourceImage) {
 
-        String compressedImagePath = compressImage(uriString, destination);
+        String compressedImagePath = compressImage(uriString, quality,destination);
 
         if (deleteSourceImage) {
             boolean isdeleted = deleteImageFile(uriString);
@@ -131,9 +132,9 @@ public class SiliCompressor {
      * @return Compress image bitmap
      * @throws IOException
      */
-    public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
+    public Bitmap getCompressBitmap(String imageUri, int quality, boolean deleteSourceImage) throws IOException {
 
-        String compressedImageUriString = compressImage(imageUri, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
+        String compressedImageUriString = compressImage(imageUri, quality,new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
         Bitmap bitmap = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), Uri.parse(compressedImageUriString));
@@ -275,7 +276,7 @@ public class SiliCompressor {
      * @param destDirectory destination directory where the compressed image will be stored.
      * @return The path of the compressed image file
      */
-    private String compressImage(String uriString, File destDirectory) {
+    private String compressImage(String uriString, int quality,File destDirectory) {
         try {
             Uri imageUri = Uri.parse(uriString);
             Bitmap scaledBitmap = null;
@@ -383,7 +384,7 @@ public class SiliCompressor {
                 OutputStream out = mContext.getContentResolver().openOutputStream(resultUri);
 
                 // write the compressed bitmap at the destination specified by filename.
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out);
                 values.clear();
                 values.put(MediaStore.Images.Media.IS_PENDING, 0);
                 mContext.getContentResolver().update(resultUri, values, null, null);
@@ -396,7 +397,7 @@ public class SiliCompressor {
                 FileOutputStream out = new FileOutputStream(filename);
 
                 //write the compressed bitmap at the destination specified by filename.
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out);
 
                 return filename;
             }
@@ -439,7 +440,7 @@ public class SiliCompressor {
                 // Compress the new file
                 Uri copyImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), image);
 
-                String compressedImagePath = compressImage(copyImageUri.toString(), new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
+                String compressedImagePath = compressImage(copyImageUri.toString(),100, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
 
                 // Delete the file created from the drawable Id
                 if (image.exists()) {
